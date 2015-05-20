@@ -14,7 +14,7 @@
         "phpunit/phpunit": "4.*"
     },
     "autoload": {
-        "psr-4": {
+        "psr-0": {
             "Docx": "src/"
         }
     }
