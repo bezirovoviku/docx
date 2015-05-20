@@ -1,7 +1,7 @@
 <?php
-require_once('docx/Docx/Generator.php');
-require_once('docx/Docx/ParseException.php');
-require_once('docx/Docx/Document.php');
+require_once('../src/Docx/Generator.php');
+require_once('../src/Docx/ParseException.php');
+require_once('../src/Docx/Document.php');
 
 $input_data = array(
 	array(

@@ -1,9 +1,6 @@
 <?php
 namespace Docx;
 
-use Docx\Document;
-use Docx\ParseException;
-
 /**
  * This class manages generation of individual documents
  */
