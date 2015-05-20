@@ -68,6 +68,9 @@ class Generator
 	 * @param string $type document type, pdf or docx (don't use pdf now)
 	 */
 	public function generateArchive($data, $path, $type = 'docx') {
+		//Create directory if nonexistent
+		@mkdir($path, 0770, true);
+
 		//Prepare result archive
 		$archive = new \ZipArchive();
 		if (!$archive->open($path, \ZipArchive::CREATE)) {
