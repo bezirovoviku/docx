@@ -69,7 +69,7 @@ class Generator
 	 */
 	public function generateArchive($data, $path, $type = 'docx') {
 		//Create directory if nonexistent
-		@mkdir($path, 0770, true);
+		@mkdir(dirname($path), 0770, true);
 
 		//Prepare result archive
 		$archive = new \ZipArchive();
