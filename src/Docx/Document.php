@@ -38,19 +38,19 @@ class Document
 	 */
 	protected function load() {
 		if (!file_exists($this->path)) {
-			throw new Exception("File '$this->path' doesn't exists.");
+			throw new \Exception("File '$this->path' doesn't exists.");
 		}
 		
 		$zip = new \ZipArchive();
 
 		if (!$zip->open($this->path)) {
-			throw new Exception("File '$this->path' is corrupt or not a package.");
+			throw new \Exception("File '$this->path' is corrupt or not a package.");
 		}
 		
 		$this->body = $zip->getFromName('word/document.xml');
 		
 		if ($this->body === false) {
-			throw new Exception("Failed to open '$this->filename/word/document.xml'.");
+			throw new \Exception("Failed to open '$this->filename/word/document.xml'.");
 		}
 		
 		$this->document = new \DOMDocument;
