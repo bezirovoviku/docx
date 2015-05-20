@@ -53,7 +53,8 @@ class Document
 			throw new Exception("Failed to open '$this->filename/word/document.xml'.");
 		}
 		
-		$this->document = \DOMDocument::loadXML($this->body);
+		$this->document = new \DOMDocument()
+		$this->document->loadXML($this->body);
 	}
 	
 	/**
