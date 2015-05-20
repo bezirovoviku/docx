@@ -87,6 +87,11 @@ class Generator
 		foreach($data as $index => $docdata) {
 			unlink("{$this->tmp}/document$index.docx");
 		}
+
+		//Check if archive was really created
+		if (!file_exists($path)) {
+			throw new \Exception("Failed to create result archive.");
+		}
 	}
 	
 	/**
