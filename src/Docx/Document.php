@@ -43,8 +43,8 @@ class Document
 		
 		$zip = new \ZipArchive();
 
-		if (!$zip->open($this->path)) {
-			throw new \Exception("File '$this->path' is corrupt or not a package.");
+		if ($zip->open($this->path) !== true) {
+			throw new \Exception("File '$this->path' is corrupt or not a docx file.");
 		}
 		
 		$this->body = $zip->getFromName('word/document.xml');
