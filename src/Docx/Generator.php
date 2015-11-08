@@ -12,9 +12,15 @@ class Generator
 	///@var string $tmp path to tmp folder
 	protected $tmp;
 	
+	///@var string $regexForeach regular expression used to find foreach
 	protected $regexForeach = '/{\s*foreach\s+([^\s]*)\s+as\s+([^\s]*)\s*}/i';
+	///@var string $regexForeachEnd regular expression used to find foreach end
 	protected $regexForeachEnd = '/{\s*\/foreach\s*}/i';
+	///@var string $regexForeach regular expression used to find any template tag
 	protected $regexReplace = '/\{([^\/][^}]*)\}/';
+	
+	///@var \Docx\Generator\Filter[] $filters available replacement filters
+	protected $filters = array();
 	
 	public function __construct() {
 		
@@ -39,15 +45,47 @@ class Generator
 	}
 	
 	/**
+	 * Automatically adds basic filters
+	 */
+	public function addFilters() {
+		$this->addFilter(new Generator\Filters\Upper);
+		$this->addFilter(new Generator\Filters\Lower);
+		$this->addFilter(new Generator\Filters\Date);
+		$this->addFilter(new Generator\Filters\Number);
+	}
+	
+	/**
+	 * Adds new filter to generator
+	 *
+	 * @param \Docx\Docx\Generator\Filter $filter filter added
+	 */
+	public function addFilter($filter) {
+		$this->filters[$filter->getTag()] = $filter;
+	}
+	
+	/**
+	 * Tries to find filter by its tag
+	 *
+	 * @param string $tag filter tag
+	 * @return \Docx\Docx\Generator\Filter|null
+	 */
+	public function getFilter($tag) {
+		return isset($this->filters[$tag]) ? $this->filters[$tag] : null;
+	}
+	
+	/**
 	 * Generates document using specified data
 	 *
 	 * @param array  $data data for template
 	 * @param string $path path to new document
 	 */
 	public function generate($data, $path) {
-		//Get template body, save unaltered copy
+		//Save template body
 		$template = $this->template->getDocument();
-		$body = $template->cloneNode(true);
+		
+		//Get template body
+		$body = new \DOMDocument();
+		$body->loadXML($this->clear($this->template->getBody()));
 		
 		//Now do replacing
 		$this->replace($body, $data);
@@ -58,6 +96,25 @@ class Generator
 		
 		//Reset template body
 		$this->template->setDocument($template);
+	}
+	
+	/**
+	 * Clears XML tags from our template tags
+	 *
+	 * @param string $body
+	 * @return string cleared body
+	 */
+	protected function clear($body) {
+		$offset = 0;
+		$copy = $body;
+		while(preg_match($this->regexReplace, $body, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+			//Entire match
+			$match = $matches[0][0];
+			//Match position
+			$offset = $matches[0][1] + strlen($match);
+			$copy = str_replace($match, strip_tags($match), $copy);
+		}
+		return $copy;
 	}
 	
 	/**
@@ -219,25 +276,107 @@ class Generator
 			//Only tag content
 			$content = $matches[1];
 			
-			//Split to object parts
-			$parts = explode('.', $content);
-			
-			//Now try to find said parts
-			$value = $context;
-			foreach($parts as $part) {
-				if (isset($value[$part])) {
-					$value = $value[$part];
-				} else {
-					$value = '';
-					break;
-				}
-			}
+			//Get tag result
+			$value = $this->parseTag($context, $content);
 			
 			//Replace the tag
 			$body = str_replace($match, $value, $body);
 		}
 		
 		return $body;
+	}
+	
+	/**
+	 * Parse tag contents and return tag value
+	 *
+	 * @param array  $context replacing context
+	 * @param string $tag     tag content
+	 * @return string parset tag value
+	 */
+	protected function parseTag($context, $tag) {
+		//@TODO: str_getcsv feels bad
+		
+		//Split to pipes
+		//$tags = str_getcsv(trim($tag), '|');
+		preg_match_all('/\*(?:\\\\.|[^\\\\\*])*\*|[^|]+/', $tag, $matches);
+		$tags = $matches[0];
+		
+		//Resulting value
+		$out = null;
+		
+		//Go trought pipes, pass value along
+		foreach($tags as $tag) {
+			//Split to arguments
+			//$tag = str_getcsv(trim($tag), ' ');
+			preg_match_all('/\*(?:\\\\.|[^\\\\\*])*\*|\S+/', $tag, $matches);
+			$tag = $matches[0];
+			
+			//Basic method or just variable name
+			$filter = array_shift($tag);
+			
+			//Temp value to store filter object if found
+			$obj = null;
+			
+			//If the first arguments isn't first name
+			if (substr($filter, 0, 1) == '$' || ($obj = $this->getFilter($filter)) === null) {
+				//No arguments, this is probably just variable
+				if (count($tag) == 0) {
+					$out = $this->findVariable($context, $filter);
+					continue;
+				}
+				
+				throw new ParseException("There is no such filter '$filter'");
+			}
+			
+			//Store filter object into right variable
+			$filter = $obj;
+			
+			//Prepare filter arguments
+			$arguments = array();
+			foreach($tag as $arg) {
+				//Not spaces needed!
+				$arg = trim(trim($arg), '*');
+				
+				//If its variable (variables as arguments must have variable sign)
+				if (substr($arg, 0, 1) == '$')
+					$arg = $this->findVariable($context, substr($arg, 1));
+				
+				$arguments[] = $arg;
+			}
+			
+			//Play filer
+			$out = $filter->filter($this, $context, $arguments, $out);
+		}
+		
+		return $out;
+	}
+	
+	/**
+	 * Tries to find variable value by its name
+	 *
+	 * @param array  $context  replacing context
+	 * @param string $variable variable name
+	 * @return string|null value or null if not found
+	 */
+	protected function findVariable($context, $variable) {
+		//Remove dolar sign if present
+		if (substr($variable, 0, 1) == '$')
+			$variable = substr($variable, 1);
+		
+		//Split by dots
+		$parts = explode('.', $variable);
+		
+		//Find actual value in nested objects if needed
+		$value = $context;
+		foreach($parts as $part) {
+			if (isset($value[$part])) {
+				$value = $value[$part];
+			} else {
+				return null;
+			}
+		}
+		
+		return $value;
 	}
 	
 	/**
