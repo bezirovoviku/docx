@@ -25,7 +25,7 @@ class Number implements \Docx\Generator\Filter
 			throw new ParseException("Date filter expects maximum of 2 arguments");
 		
 		//Default values
-		$value = $input;
+		$value = (int)$input;
 		$format = 'en';
 		$decimals = 0;
 		
