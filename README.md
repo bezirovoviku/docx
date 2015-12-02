@@ -1,5 +1,5 @@
 # Docx template generator
-This is simple template system for docx files. It only uses text replacement, but allows cyclical replacements and basic filters.
+This is simple template system for docx files. It uses text replacement, allows cyclical replacements and basic filters.
 
 ## Usage
 
