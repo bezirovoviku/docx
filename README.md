@@ -1,6 +1,11 @@
 # Docx template generator
 This is simple template system for docx files. It uses text replacement, allows cyclical replacements and basic filters.
 
+## Installation
+You can install this library using composer
+
+```composer require bezirovoviku/docx```
+
 ## Usage
 
 First you will need to include the generator class
@@ -29,7 +34,7 @@ $generator->generateArchive(json_decode($this->data, true), 'archive.zip');
 To create custom filter, you will need to implement \Docx\Generator\Filter interace
 
 ```php
-class MyFilter implements Filter
+class MyFilter implements \Docx\Generator\Filter
 {
 	/**
 	 * Returns tag used to identify filter
