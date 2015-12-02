@@ -4,7 +4,9 @@ This is simple template system for docx files. It uses text replacement, allows 
 ## Installation
 You can install this library using composer
 
-```composer require bezirovoviku/docx```
+```
+composer require bezirovoviku/docx
+```
 
 ## Usage
 
