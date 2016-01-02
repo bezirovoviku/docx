@@ -6,6 +6,9 @@ require_once('../src/Docx/Generator/Filters/Upper.php');
 require_once('../src/Docx/Generator/Filters/Lower.php');
 require_once('../src/Docx/Generator/Filters/Date.php');
 require_once('../src/Docx/Generator/Filters/Number.php');
+require_once('../src/Docx/Converter.php');
+require_once('../src/Docx/Converter/OPDF.php');
+require_once('../src/Docx/Converter/MPDF.php');
 require_once('../src/Docx/ParseException.php');
 require_once('../src/Docx/Document.php');
 

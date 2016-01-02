@@ -122,9 +122,9 @@ class Generator
 	 *
 	 * @param array  $data array where each element is data for one document
 	 * @param string $path where to save generated archive
-	 * @param string $type document type, pdf or docx (don't use pdf now)
+	 * @param \Docx\Converter $converter OPTIONAL document converter
 	 */
-	public function generateArchive($data, $path, $type = 'docx') {
+	public function generateArchive($data, $path, $converter = null) {
 		//Create directory if nonexistent
 		@mkdir(dirname($path), 0770, true);
 
@@ -136,8 +136,19 @@ class Generator
 
 		//Create documents and add them to archive
 		foreach($data as $index => $docdata) {
-			$this->generate($docdata, "{$this->tmp}/document$index.docx");
-			$archive->addFile("{$this->tmp}/document$index.docx", "document$index.docx");
+			//Generate file
+			$file = "{$this->tmp}/document$index.docx";
+			$this->generate($docdata, $file);
+			
+			//Convert if needed
+			$ext = "docx";
+			if ($converter) {
+				$converter->save(new Document($file), $file);
+				$ext = $converter->getExtension();
+			}
+			
+			//Put to archive
+			$archive->addFile($file, "document$index.$ext");
 		}
 		
 		//Write documents to archive

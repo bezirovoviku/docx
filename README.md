@@ -8,6 +8,10 @@ You can install this library using composer
 composer require bezirovoviku/docx
 ```
 
+## Requirements
+
+LibreOffice (2+) - only for OPDF converter
+
 ## Usage
 
 First you will need to include the generator class
@@ -70,3 +74,22 @@ $generator->addFilter(new MyFilter());
 ```
 
 now, in this generator instance, filter MyFilter will be accessible by {myfilter} syntax
+
+## Exporting pdf
+
+This requires libreoffice installed
+
+```php
+//Creates generator
+$generator = new Generator();
+//PDF converter
+$converter = new Convertor\OPDF();
+//Adds basic filters
+$generator->addFilters();
+//Sets temporary folder used to store documents
+$generator->setTmp('/tmp');
+//Sets path to template file
+$generator->setTemplate('template.docx');
+//Generates zip archive from specified data, converts using converter
+$generator->generateArchive(json_decode($this->data, true), 'archive.zip', $converter);
+```
